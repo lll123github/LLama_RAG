@@ -1,0 +1,27 @@
+{
+    // "include": [
+    //   "./rag/**/*.py",
+    //   "./unified_app.py",
+    //   "./search_strings.py"
+    // ],
+    "exclude": [
+      "**/.venv",
+      "**/__pycache__",
+      "**/node_modules",
+  
+      // llama.cpp 整棵树不让 Pyright 看
+      "./llama.cpp",
+  
+      // 模型和内容目录
+      "./models",
+      "./rag/content",
+  
+      // 构建 & 运行产物
+      "**/build",
+      "**/dist",
+      "**/out"
+    ],
+  
+    "typeCheckingMode": "basic"
+  }
+  

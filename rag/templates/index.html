@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>字符串匹配搜索工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 900px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .search-section {
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .input-group input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .input-group button {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .input-group button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .input-group button:active {
+            transform: translateY(0);
+        }
+
+        .input-group button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status-message {
+            padding: 12px 15px;
+            border-radius: 6px;
+            font-size: 13px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .status-message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+
+        .status-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+
+        .status-message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+            display: block;
+        }
+
+        .results-section {
+            display: none;
+        }
+
+        .results-section.active {
+            display: block;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .results-header h2 {
+            color: #333;
+            font-size: 18px;
+        }
+
+        .results-count {
+            background: #667eea;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .results-container {
+            max-height: 600px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+        }
+
+        .result-item {
+            padding: 15px;
+            border-bottom: 1px solid #e0e0e0;
+            transition: background-color 0.2s;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-item:hover {
+            background-color: #f9f9f9;
+        }
+
+        .result-file {
+            font-weight: 600;
+            color: #667eea;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .result-context {
+            color: #555;
+            font-size: 13px;
+            line-height: 1.6;
+            word-break: break-word;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            border-left: 3px solid #667eea;
+        }
+
+        .result-context .highlight {
+            background: #fff3cd;
+            padding: 2px 4px;
+            border-radius: 2px;
+            font-weight: 600;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+
+        .empty-state svg {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        .source-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .source-badge.cache {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .source-badge.live {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .stats-info {
+            padding: 10px 15px;
+            background: #f9f9f9;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 15px;
+            border-left: 3px solid #667eea;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 22px;
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+
+            .input-group button {
+                width: 100%;
+            }
+
+            .results-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 字符串匹配搜索工具</h1>
+            <p>在内容文件中快速搜索字符串，查看匹配的上下文</p>
+        </div>
+
+        <div class="search-section">
+            <div class="input-group">
+                <input 
+                    type="text" 
+                    id="searchInput" 
+                    placeholder="输入要搜索的字符串..." 
+                    autocomplete="off"
+                >
+                <button id="searchBtn" onclick="performSearch()">匹配</button>
+            </div>
+            <div id="statusMessage" class="status-message"></div>
+        </div>
+
+        <div id="loadingSpinner" class="loading">
+            <div class="spinner"></div>
+            <p>正在搜索中...</p>
+        </div>
+
+        <div id="resultsSection" class="results-section">
+            <div id="statsInfo" class="stats-info" style="display: none;"></div>
+            <div class="results-header">
+                <h2>搜索结果</h2>
+                <span id="resultsCount" class="results-count">0 个匹配</span>
+            </div>
+            <div id="resultsContainer" class="results-container">
+                <div class="empty-state">
+                    <p>暂无结果</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const searchInput = document.getElementById('searchInput');
+        const searchBtn = document.getElementById('searchBtn');
+        const statusMessage = document.getElementById('statusMessage');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const resultsSection = document.getElementById('resultsSection');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const resultsCount = document.getElementById('resultsCount');
+
+        // 回车键触发搜索
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+
+        async function performSearch() {
+            const searchString = searchInput.value.trim();
+
+            if (!searchString) {
+                showMessage('请输入搜索字符串', 'error');
+                return;
+            }
+
+            // 禁用按钮，显示加载状态
+            searchBtn.disabled = true;
+            loadingSpinner.classList.add('active');
+            statusMessage.classList.remove('success', 'error', 'info');
+            resultsSection.classList.remove('active');
+
+            try {
+                const response = await fetch('/api/search', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ search_string: searchString })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    displayResults(result.data, searchString, result.count, result.source);
+                    showMessage(result.message, 'success');
+                } else {
+                    showMessage(result.message, 'error');
+                }
+            } catch (error) {
+                showMessage(`网络错误: ${error.message}`, 'error');
+                console.error('搜索错误:', error);
+            } finally {
+                searchBtn.disabled = false;
+                loadingSpinner.classList.remove('active');
+            }
+        }
+
+        function displayResults(data, searchString, count, source) {
+            resultsCount.textContent = `${count} 个匹配`;
+
+            // 显示统计信息
+            const statsInfo = document.getElementById('statsInfo');
+            const sourceBadgeClass = source === 'cache' ? 'cache' : 'live';
+            const sourceText = source === 'cache' ? '缓存搜索' : '实时搜索';
+            statsInfo.innerHTML = `📊 数据来源: <span class="source-badge ${sourceBadgeClass}">${sourceText}</span>`;
+            statsInfo.style.display = 'block';
+
+            if (count === 0) {
+                resultsContainer.innerHTML = `
+                    <div class="empty-state">
+                        <p>未找到匹配的结果</p>
+                    </div>
+                `;
+                resultsSection.classList.add('active');
+                return;
+            }
+
+            let html = '';
+            for (const [fileName, contexts] of Object.entries(data)) {
+                contexts.forEach((context, index) => {
+                    // 高亮搜索字符串
+                    const highlightedContext = context.replace(
+                        new RegExp(`(${escapeRegExp(searchString)})`, 'g'),
+                        '<span class="highlight">$1</span>'
+                    );
+
+                    html += `
+                        <div class="result-item">
+                            <div class="result-file">📄 ${fileName}</div>
+                            <div class="result-context">${highlightedContext}</div>
+                        </div>
+                    `;
+                });
+            }
+
+            resultsContainer.innerHTML = html;
+            resultsSection.classList.add('active');
+        }
+
+        function showMessage(message, type) {
+            statusMessage.textContent = message;
+            statusMessage.className = `status-message ${type}`;
+
+            // 3秒后自动隐藏成功和信息消息
+            if (type !== 'error') {
+                setTimeout(() => {
+                    statusMessage.classList.remove('success', 'info');
+                }, 3000);
+            }
+        }
+
+        function escapeRegExp(string) {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        // 页面加载时检查服务健康状态
+        window.addEventListener('load', async () => {
+            try {
+                const response = await fetch('/api/health');
+                if (response.ok) {
+                    showMessage('服务已连接', 'info');
+                }
+            } catch (error) {
+                showMessage('无法连接到服务', 'error');
+            }
+        });
+    </script>
+</body>
+</html>
+
