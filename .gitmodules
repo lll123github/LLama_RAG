@@ -1,3 +1,7 @@
 [submodule "llama.cpp"]
 	path = llama.cpp
 	url = https://github.com/lll123github/llama.cpp
+[submodule "Qwen3-VL-2B-finetune"]
+	path = Qwen3-VL-2B-finetune
+	url = https://github.com/lll123github/Qwen3-VL-2B-finetune.git
+	branch = pr-liumk
